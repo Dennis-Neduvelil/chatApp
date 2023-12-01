@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                         String              @id @default(uuid())
+  createdAt                  DateTime            @default(now())
+  updatedAt                  DateTime            @default(now())
+  email                      String              @unique
+  password                   String
+  fullName                   String
+  sentConnectionRequests     ConnectionRequest[] @relation("SenderConnection")
+  receivedConnectionRequests ConnectionRequest[] @relation("ReceiverConnection")
+  sentMessages               UserChats[]         @relation("MessageSender")
+  receivedMessages           UserChats[]         @relation("MessageReceiver")
+}
+
+model ConnectionRequest {
+  id         String   @id @default(uuid())
+  sender     User     @relation(name: "SenderConnection", fields: [senderId], references: [id])
+  senderId   String
+  receiver   User     @relation(name: "ReceiverConnection", fields: [receiverId], references: [id])
+  receiverId String
+  accepted   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+
+  @@unique([senderId, receiverId])
+}
+
+model UserChats {
+  id         String   @id @default(uuid())
+  message    String
+  sender     User     @relation(name: "MessageSender", fields: [senderId], references: [id])
+  senderId   String
+  receiver   User     @relation(name: "MessageReceiver", fields: [receiverId], references: [id])
+  receiverId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+}
